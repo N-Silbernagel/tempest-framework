@@ -18,7 +18,7 @@ use Tempest\View\View;
 #[InitializedBy(RouteInitializer::class)]
 final readonly class GenericRouter implements Router
 {
-    private const string MARK_TOKEN = 'MARK';
+    public const string MARK_TOKEN = 'MARK';
 
     public function __construct(
         private Container $container,
@@ -190,21 +190,10 @@ final readonly class GenericRouter implements Router
 
         /** @var \Tempest\Http\Route[] $routesForMethod */
         $routesForMethod = array_values($routesForMethod);
-        $combinedMatchingRegex = "#^(?|";
 
-        foreach ($routesForMethod as $routeIndex => $route) {
-            if (! $route->isDynamic) {
-                continue; // TODO: why this check?
-            }
-
-            $combinedMatchingRegex .= "$route->matchingRegex (*" . self::MARK_TOKEN . ":$routeIndex) |";
-        }
-
-        $combinedMatchingRegex = rtrim($combinedMatchingRegex, '|');
-        $combinedMatchingRegex .= ')$#x';
 
         // Then we'll use this regex to see whether we have a match or not
-        $matchResult = preg_match($combinedMatchingRegex, $request->getPath(), $matches);
+        $matchResult = preg_match($this->routeConfig->regex, $request->getPath(), $matches);
 
         if (! $matchResult || ! array_key_exists(self::MARK_TOKEN, $matches)) {
             return null;
